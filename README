@@ -1,0 +1,21 @@
+This Python code is the accompanying software for the paper:
+Wei Jiao, Shankar Vembu, Amit G. Deshwar, Lincoln Stein and Quaid Morris,
+Inferring clonal evolution of tumors from single nucleotide somatic mutations,
+BMC Bioinformatics 15:35, 2014.
+
+It is built on top of the the code associated with the paper:
+Ryan Prescott Adams, Zoubin Ghahramani and Michael I. Jordan,
+Tree-Structured Stick Breaking for Hierarchical Data,  
+Advances in Neural Information Processing Systems (NIPS) 23, 2010
+http://hips.seas.harvard.edu/files/tssb.tgz
+
+######################################################################
+
+DEPENDENCIES:
+SciPy - http://www.scipy.org/
+ETE2 - http://ete.cgenomics.org/
+CVXOPT - http://cvxopt.org/
+PyGraphviz - http://networkx.lanl.gov/pygraphviz/
+
+#######################################################################
+
