@@ -19,6 +19,19 @@ PyGraphviz - http://networkx.lanl.gov/pygraphviz/
 
 #######################################################################
 
+PREPARING THE INPUT FILE:
+Input file format:
+The input to evolve.py should be a tab-delimited text file with 7 columns. The required column headers are:
+-- gene: identifier for each somatic variant (each row should have a unique identifier)
+-- a: number of reference allele read counts on the variant locus (if the read counts are from multiple tumour samples, the numbers from each sample should be separated by a comma ',', e.g. for three samples:  500, 342, 423)
+-- d: total number of reads at the locus (if the read counts are from multiple tumor samples, they should be separated by a comma ',')
+-- mu_r: fraction of expected reference allele sampling from reference population (e.g. if it is an A->T somatic mutation at the locus, the genotype of the reference population should be AA, so the mu_r should be 1-sequencing error rate)
+-- mu_v: fraction of expected reference allele sampling from variant population (e.g. if it is an A->T somatic mutation at the locus, copy number is 2 and the expected genotype is AT for the variant population, then the expected fraction of expected reference should be 0.5)
+-- delta_r and delta_v: pseudo-count for the Dirichlet prior on genotype probabilities (recommended value is 1, if no other prior information is available)
+
+#######################################################################
+
+RUNNING THE SOFTWARE:
 1. To run the code on the sample data set "data.txt," execute the following command:
 
 python evolve.py 'data.txt' 'trees' 'top_k_trees' 'clonal_frequencies' 'llh_trace' 100 100 1
