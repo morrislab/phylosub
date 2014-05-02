@@ -18,12 +18,12 @@ class alleles(Node):
 	def __init__(self, parent=None, tssb=None, conc=0.1,ntps=5):
 		super(alleles, self).__init__(parent=parent, tssb=tssb)
 		
+		if tssb!=None: ntps= len(tssb.data[0].a)
+		
 		# pi is a first-class citizen
 		self.pi=zeros(ntps); self.params=zeros(ntps) 
 		self.params1=zeros(ntps);self.pi1=zeros(ntps) # used in MH	to store old state
-		
-		if tssb!=None: ntps= len(tssb.data[0].a)
-		
+				
 		if parent is None:
 			self._conc = conc			
 			self.pi = 1.0*ones(ntps)
