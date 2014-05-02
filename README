@@ -4,3 +4,5 @@ Inferring clonal evolution of tumors from single nucleotide somatic mutations,
 BMC Bioinformatics 15:35, 2014.
 
 Please check the README files in the python and c++ folders for instructions to run the software.
+
+NOTE: The C++ code is orders of magnitude faster than the python code.
