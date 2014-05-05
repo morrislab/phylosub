@@ -25,8 +25,7 @@ GSL- http://www.gnu.org/software/gsl/
 PREPARING THE INPUT FILE:
 Input file format:
 The input to evolve.py should be a tab-delimited text file with 8 columns. The required column headers are:
--- id: identifier for each somatic variant (each row should have a unique identifier, starting from 0 in increments of 1)
--- gene: gene name
+-- gene: identifier for each somatic variant (each row should have a unique identifier)
 -- a: number of reference allele read counts on the variant locus 
 -- d: total number of reads at the locus 
 -- mu_r: fraction of expected reference allele sampling from reference population (e.g. if it is an A->T somatic mutation at the locus, the genotype of the reference population should be AA, so the mu_r should be 1-sequencing error rate)

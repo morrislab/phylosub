@@ -157,27 +157,27 @@ void load_data(char fname[],struct datum *data, struct config conf){
 			if(ctr==0){
 				data->id=id;
 			}
-			else if(ctr==2){
+			else if(ctr==1){
 				data->a=atoi(token.c_str());
 			}
-			else if(ctr==3){
+			else if(ctr==2){
 				data->d=atof(token.c_str());
 				data->log_bin_norm_const=log_bin_coeff(data->d,data->a);
 			}
-			else if(ctr==4){
+			else if(ctr==3){
 				data->mu_r=atof(token.c_str());
 			}
-			else if(ctr==5){
+			else if(ctr==4){
 				data->delta_r=atoi(token.c_str());
 			}
-			else if(ctr==6){
+			else if(ctr==5){
 				istringstream iss(token);
 				for(int i=0;i<conf.NDELTA;i++){
 					getline(iss,token1,',');
 					data->mu_v.push_back(atof(token1.c_str()));
 				}
 			}
-			else if(ctr==7){
+			else if(ctr==6){
 				istringstream iss(token);
 				for(int i=0;i<conf.NDELTA;i++){
 					getline(iss,token1,',');

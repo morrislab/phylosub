@@ -33,9 +33,9 @@ def logsumexp(X, axis=None):
 def load_data(fname):
 	reader = csv.DictReader(open(fname), delimiter='\t')
 	data = []
+	id=0
 	for row in reader:
 		name = row['gene'] 
-		id = row['id']    
 		a = [int(x) for x in row['a'].split(',')]       
 		d = [int(x) for x in row['d'].split(',')]
         
@@ -46,6 +46,7 @@ def load_data(fname):
 		delta_v = [float(x) for x in row['delta_v'].split(',')]
         
 		data.append(Datum(name, id, a, d, mu_r, mu_v, delta_r, delta_v))
+		id+=1
 	
 	return data
 
