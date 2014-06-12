@@ -29,7 +29,7 @@ def logsumexp(X, axis=None):
     return numpy.log(numpy.sum(numpy.exp(X - maxes), axis=axis)) + maxes
 
 def load_data(fname):
-	reader = csv.DictReader(open(fname), delimiter='\t')
+	reader = csv.DictReader(open(fname,'rU'), delimiter='\t')
 	data = []    
 	for row in reader:
 		name = row['gene']      
