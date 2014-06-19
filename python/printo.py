@@ -28,14 +28,16 @@ def print_best_tree(fin,fout):
 	
 	wts, nodes = tssb.get_mixture()
 	w = dict([(n[1], n[0]) for n in zip(wts,nodes)])
+	nnodes = sum( [ 1 for node in nodes if len(node.get_data()) ] )
 	
 	#fout=open(fout,'w')
 	t = Tree();t.name='0'
-	fout.write('id, \t phi, \t nChildren, \t nGenes, \t genes \n')
+	fout.write('id, \t phi, \t nChildren, \t nGenes, \t genes \n')	
 	print_node2(tssb.root,None,t,w,fout)
 	fout.write('\n\n')
 	fout.write(t.get_ascii(show_internal=True))
 	fout.write('\n\n')	
+	fout.write('Number of non-empty nodes in the tree: ' +repr(nnodes))	
 	#fout.close()
 
 def print_node2(node, parent,tree,wts,fout):
