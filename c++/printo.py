@@ -38,6 +38,7 @@ def print_best_tree(fin,fout):
 	fout.write(t.get_ascii(show_internal=True))
 	fout.write('\n\n')	
 	fout.write('Number of non-empty nodes in the tree: ' +repr(nnodes))
+	fout.write('\n\n\n')
 	#fout.close()
 
 def print_node2(node, parent,tree,wts,fout):
