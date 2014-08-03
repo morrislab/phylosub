@@ -31,11 +31,12 @@ def metropolis(tssb,iters=1000,std=[0.01],burnin=0,ntps=1,fin=''):
 	NDELTA = str(len(tssb.data[0].delta_v))
 	NNODES = str(len(nodes))
 	TREE_HEIGHT = str(max([node.ht for node in nodes])+1)
+	NTPS = str(ntps)
 	
 	FNAME_DATA = fin
 	
 	#call(['./mh.o', '-d', './vw/'+fname, '-c', '--passes', '25', '--l1', '1e-6', '--l2', '0', '--readable_model', './weights/'+fname])
-	call(['./mh.o', MH_ITR, MH_STD, NDATA, NDELTA, NNODES, TREE_HEIGHT,FNAME_DATA])
+	call(['./mh.o', MH_ITR, MH_STD, NDATA, NDELTA, NNODES, TREE_HEIGHT,FNAME_DATA, NTPS])
 	
 	update_tree_params(tssb)	
 	
@@ -61,7 +62,7 @@ def write_tree(tssb):
 		dids=dids.strip(',')
 		if dids=='': dids=str(-1)
 		
-		line = str(root.id) + '\t' + str(root.params[0]) + '\t' + str(root.pi[0]) + '\t' + str(len(root.children())) + '\t'  + cids + '\t' + str(len(root.get_data())) + '\t' + dids + '\t' +  str(root.ht)
+		line = str(root.id) + '\t' + list_to_string(root.params) + '\t' + list_to_string(root.pi) + '\t' + str(len(root.children())) + '\t'  + cids + '\t' + str(len(root.get_data())) + '\t' + dids + '\t' +  str(root.ht)
 		fh.write(line)
 		fh.write('\n')
 		fh.flush()
@@ -71,17 +72,28 @@ def write_tree(tssb):
 	fh.flush()
 	fh.close()
 
+def list_to_string(p):
+    o=''
+    for pp in p:o+=str(pp)+','
+    return o.strip(',')
 
 def update_tree_params(tssb):
 	wts, nodes = tssb.get_mixture()
 	ndict = dict()
 	for node in nodes: ndict[node.id]=node
 	
-	params=loadtxt('c_params.txt')
+	fh=open('c_params.txt')
+	params=[line.split() for line in fh.readlines()]
+	fh.close()
+    
 	for p in params:
-		ndict[p[0]].params[0] = p[1]
-		ndict[p[0]].pi[0] = p[2]
+		ndict[int(p[0])].params = string_to_list(p[1])
+		ndict[int(p[0])].pi = string_to_list(p[2])
 
+def string_to_list(p):
+    p=p.strip(',')
+    return array([float(pp) for pp in p.split(',')])
+    
 def set_node_height(tssb):
 	tssb.root['node'].ht=0
 	def descend(root,ht):

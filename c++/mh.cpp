@@ -33,13 +33,15 @@ int main(int argc, char* argv[]){
 	
 	char* FNAME_DATA = argv[7];
 	
+	conf.NTPS = atoi(argv[8]); // no. of samples 
+	
 	struct datum data[conf.NDATA];
 	load_data(FNAME_DATA,data,conf);
 	for(int i=0;i<conf.NDATA;i++)
 		data[i].log_pi_r=0;
 	
 	struct node nodes[conf.NNODES];
-	load_tree("c_tree.txt",nodes);	 
+	load_tree("c_tree.txt",nodes,conf);	 
 	
 	//start MH loop	
 	mh_loop(nodes,data,conf);	
@@ -54,24 +56,30 @@ int main(int argc, char* argv[]){
 void mh_loop(struct node nodes[],struct datum data[],struct config conf){
 	gsl_rng *rand = gsl_rng_alloc(gsl_rng_mt19937);
 	for (int itr=0;itr<conf.MH_ITR;itr++){
-		sample_cons_params(nodes,conf,rand);		
+	
+		for(int tp=0;tp<conf.NTPS;tp++)
+			sample_cons_params(nodes,conf,rand,tp);		
 		
-		double pi[conf.NNODES],pi_new[conf.NNODES];
-		get_pi(nodes,pi_new,conf,0);
-		get_pi(nodes,pi,conf,1);		
+		double a = multi_param_post(nodes,data,0,conf)-multi_param_post(nodes,data,1,conf);	
 		
-		double a = param_post(nodes,data,0,conf)-param_post(nodes,data,1,conf);			
-		
-		// apply the dirichlet correction terms
+		// loop over samples, apply dirichlet correction terms, update a
 		double theta[conf.NNODES];// dirichlet params
-		for(int i=0;i<conf.NNODES;i++)
-			theta[i]=conf.MH_STD*pi_new[i];
-		a += gsl_ran_dirichlet_lnpdf(conf.NNODES,theta,pi);
+		double pi[conf.NNODES],pi_new[conf.NNODES];
+		for(int tp=0;tp<conf.NTPS;tp++){
 			
-		for(int i=0;i<conf.NNODES;i++)
-			theta[i]=conf.MH_STD*pi[i];
-		a -= gsl_ran_dirichlet_lnpdf(conf.NNODES,theta,pi_new);
-				
+			get_pi(nodes,pi_new,conf,0,tp);
+			get_pi(nodes,pi,conf,1,tp);		
+		
+			// apply the dirichlet correction terms
+			for(int i=0;i<conf.NNODES;i++)
+				theta[i]=conf.MH_STD*pi_new[i];
+			a += gsl_ran_dirichlet_lnpdf(conf.NNODES,theta,pi);
+			
+			for(int i=0;i<conf.NNODES;i++)
+				theta[i]=conf.MH_STD*pi[i];
+			a -= gsl_ran_dirichlet_lnpdf(conf.NNODES,theta,pi_new);
+		}
+		
 		double r = gsl_rng_uniform_pos(rand);		
 		if (log(r)<a){
 			update_params(nodes,conf);			
@@ -81,7 +89,7 @@ void mh_loop(struct node nodes[],struct datum data[],struct config conf){
 }
 
 
-void sample_cons_params(struct node nodes[], struct config conf, gsl_rng *rand){
+void sample_cons_params(struct node nodes[], struct config conf, gsl_rng *rand, int tp){
 
 	map <int, int> node_id_map;
 	for(int i=0;i<conf.NNODES;i++)
@@ -90,7 +98,7 @@ void sample_cons_params(struct node nodes[], struct config conf, gsl_rng *rand){
 	int NNODES=conf.NNODES;
 	double pi[NNODES];
 	for(int i=0;i<NNODES;i++)
-		pi[i]=nodes[i].pi;
+		pi[i]=nodes[i].pi[tp];
 	
 	// randomly sample from a dirichlet
 	double pi_new[NNODES],alpha[NNODES];
@@ -100,29 +108,34 @@ void sample_cons_params(struct node nodes[], struct config conf, gsl_rng *rand){
 	
 	// update the nodes pi1 (new pi)
 	for(int i=0;i<NNODES;i++)
-		nodes[i].pi1=pi_new[i];		
+		nodes[i].pi1[tp]=pi_new[i];		
 	
 	// update the nodes param1 (new param)
 	for(int i=0;i<NNODES;i++){		
-		double param = nodes[i].pi1;			
+		double param = nodes[i].pi1[tp];			
 		for(int c=0;c<nodes[i].nchild;c++){
-			param+=nodes[node_id_map[nodes[i].cids.at(c)]].param1;
+			param+=nodes[node_id_map[nodes[i].cids.at(c)]].param1[tp];
 		}
-		nodes[i].param1=param;
+		nodes[i].param1[tp]=param;
 	}
 }
 
-
-double param_post(struct node nodes[], struct datum data[], int old,struct config conf){	
+double multi_param_post(struct node nodes[], struct datum data[], int old,struct config conf){
+    double post=0.0;
+    for(int tp=0;tp<conf.NTPS;tp++)
+        post+=param_post(nodes,data,old,conf,tp);
+    return post;
+}    
+double param_post(struct node nodes[], struct datum data[], int old,struct config conf, int tp){	
 	double llh = 0.0;
 	for(int i=0;i<conf.NNODES;i++){
 		double p=0;
 		if(old==0)
-			p=nodes[i].param1;
+			p=nodes[i].param1[tp];
 		else
-			p=nodes[i].param;
+			p=nodes[i].param[tp];
 		for(int j=0;j<nodes[i].ndata;j++){
-			llh+=data[nodes[i].dids.at(j)].log_ll(p);
+			llh+=data[nodes[i].dids.at(j)].log_ll(p,tp);
 		}
 	}
 	return llh;	
@@ -130,17 +143,19 @@ double param_post(struct node nodes[], struct datum data[], int old,struct confi
 
 void update_params(struct node nodes[],struct config conf){	
 	for(int i=0;i<conf.NNODES;i++){
-		nodes[i].param=nodes[i].param1;
-		nodes[i].pi=nodes[i].pi1;
+		for(int tp=0;tp<conf.NTPS;tp++){
+			nodes[i].param[tp]=nodes[i].param1[tp];
+			nodes[i].pi[tp]=nodes[i].pi1[tp];
+		}
 	}
 }
 
-void get_pi(struct node nodes[], double pi[], struct config conf, int old){
+void get_pi(struct node nodes[], double pi[], struct config conf, int old, int tp){
 	for(int i=0;i<conf.NNODES;i++){
 		if (old==0)
-			pi[i]=nodes[i].pi1;
+			pi[i]=nodes[i].pi1[tp];
 		else
-			pi[i]=nodes[i].pi;
+			pi[i]=nodes[i].pi[tp];
 	}
 }
 
@@ -158,11 +173,20 @@ void load_data(char fname[],struct datum *data, struct config conf){
 				data->id=id;
 			}
 			else if(ctr==1){
-				data->a=atoi(token.c_str());
+				istringstream iss(token);
+				for(int tp=0;tp<conf.NTPS;tp++){
+					getline(iss,token1,',');
+					data->a.push_back(atoi(token1.c_str()));
+				}
 			}
 			else if(ctr==2){
-				data->d=atof(token.c_str());
-				data->log_bin_norm_const=log_bin_coeff(data->d,data->a);
+				istringstream iss(token);
+				for(int tp=0;tp<conf.NTPS;tp++){
+					getline(iss,token1,',');
+					data->d.push_back(atof(token1.c_str()));
+				}
+				for(int tp=0;tp<conf.NTPS;tp++)
+					data->log_bin_norm_const.push_back(log_bin_coeff(data->d[tp],data->a[tp]));
 			}
 			else if(ctr==3){
 				data->mu_r=atof(token.c_str());
@@ -194,7 +218,7 @@ void load_data(char fname[],struct datum *data, struct config conf){
 }
 
 
-void load_tree(char fname[], struct node *nodes){
+void load_tree(char fname[], struct node *nodes, struct config conf){
 	string line,token,token1;
 	ifstream dfile (fname);
 	int ctr=0;
@@ -206,10 +230,20 @@ void load_tree(char fname[], struct node *nodes){
 				nodes->id=atoi(token.c_str());
 			}
 			else if(ctr==1){
-				nodes->param=atof(token.c_str());
+				istringstream iss(token);
+				for(int tp=0;tp<conf.NTPS;tp++){
+					getline(iss,token1,',');
+					nodes->param.push_back(atof(token1.c_str()));
+					nodes->param1.push_back(0.0);
+				}
 			}
 			else if(ctr==2){
-				nodes->pi=atof(token.c_str());
+				istringstream iss(token);
+				for(int tp=0;tp<conf.NTPS;tp++){
+					getline(iss,token1,',');
+					nodes->pi.push_back(atof(token1.c_str()));
+					nodes->pi1.push_back(0.0);
+				}
 			}
 			else if(ctr==5){
 				nodes->ndata=atoi(token.c_str());
@@ -245,7 +279,13 @@ void write_params(char fname[], struct node *nodes, struct config conf){
 	ofstream dfile;
 	dfile.open(fname);
 	for(int i=0;i<conf.NNODES;i++){		
-		dfile<<nodes[i].id<<'\t'<<nodes[i].param<<'\t'<<nodes[i].pi<<'\n';
+		dfile<<nodes[i].id<<'\t';
+		for(int tp=0;tp<conf.NTPS;tp++)
+			dfile<<nodes[i].param[tp]<<',';
+		dfile<<'\t';
+		for(int tp=0;tp<conf.NTPS;tp++)
+			dfile<<nodes[i].pi[tp]<<',';
+		dfile<<'\n';
 	}	
 	dfile.close();	
 }
