@@ -9,8 +9,6 @@ Tree-Structured Stick Breaking for Hierarchical Data,
 Advances in Neural Information Processing Systems (NIPS) 23, 2010
 http://hips.seas.harvard.edu/files/tssb.tgz
 
-IMPORTANT NOTE: The software currently does not support multiple tumor samples.
-
 ######################################################################
 
 DEPENDENCIES:
