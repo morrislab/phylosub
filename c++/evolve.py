@@ -44,7 +44,7 @@ NTPS = 1
 # mh_itr: number of metropolis-hasting iterations
 # dp_alpha: dp alpha
 # rand_seed: random seed (initialization)
-def run(fin='data.txt',fout='./best',out2='top_k_trees',out3='clonal_frequencies',out4='llh_trace',num_samples=100,mh_itr=5000,rand_seed=1):
+def run(fin='data.txt',fout='./best',out2='top_k_trees',out3='clonal_frequencies',out4='llh_trace',num_samples=2500,mh_itr=5000,rand_seed=1):
 	if not os.path.exists(fout):
 		os.makedirs(fout)
 	else:

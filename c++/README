@@ -38,7 +38,7 @@ g++ -o mh.o  mh.cpp  util.cpp `gsl-config --cflags --libs`
 RUNNING THE SOFTWARE:
 1. To run the code on the sample data set "data.txt," execute the following command:
 
-python evolve.py 'data.txt' 'trees' 'top_k_trees' 'clonal_frequencies' 'llh_trace' 100 5000 1
+python evolve.py 'data.txt' 'trees' 'top_k_trees' 'clonal_frequencies' 'llh_trace' 2500 5000 1
 
 # 'data.txt': file name of the input data
 # 'trees': output folder name where the MCMC trees/samples are saved 
